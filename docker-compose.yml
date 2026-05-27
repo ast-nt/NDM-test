@@ -1,0 +1,68 @@
+services:
+  app.local:
+    build: 
+      context: ./app
+      dockerfile: Dockerfile
+    read_only: true
+    cap_add:
+      - NET_ADMIN
+    networks:
+      NDM-net:
+        ipv4_address: 192.168.200.50
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      start_interval: 1s
+      start_period: 5s
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  nginx-1.local:
+    image: nginx:1.31.1
+    ports:
+      - "81:80"
+    networks:
+      NDM-net:
+        ipv4_address: 192.168.200.101
+    volumes:
+      - "./nginx/nginx1.conf:/etc/nginx/nginx.conf:ro"
+    depends_on:
+          app.local:
+            condition: service_healthy
+            restart: true    
+
+  nginx-2.local:
+    image: nginx:1.31.1
+    ports:
+      - "82:80"
+    networks:
+      NDM-net:
+        ipv4_address: 192.168.200.102
+    volumes:
+      - "./nginx/nginx2.conf:/etc/nginx/nginx.conf:ro"
+    depends_on:
+          app.local:
+            condition: service_healthy
+            restart: true    
+
+  nginx-3.local:
+    image: nginx:1.31.1
+    ports:
+      - "83:80"
+    networks:
+      NDM-net:
+        ipv4_address: 192.168.200.103
+    volumes:
+      - "./nginx/nginx3.conf:/etc/nginx/nginx.conf:ro"
+    depends_on:
+          app.local:
+            condition: service_healthy
+            restart: true    
+
+
+networks:
+  NDM-net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.200.0/24
